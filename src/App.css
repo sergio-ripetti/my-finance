@@ -1,0 +1,400 @@
+/* Global color variables for consistent theming */
+:root {
+  --app-bg: #f1f5f9;
+  --card-bg: #ffffff;
+  --border-color: #e2e8f0;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --primary-dark: #0f172a;
+  --primary-hover: #1e293b;
+  --success-soft: #dcfce7;
+  --success-text: #15803d;
+  --neutral-soft: #f1f5f9;
+  --neutral-text: #475569;
+  --danger-main: #dc2626;
+  --danger-hover: #b91c1c;
+  --info-soft: #eff6ff;
+  --info-text: #1d4ed8;
+}
+
+/* Base body styling */
+body {
+  background-color: var(--app-bg);
+  color: var(--text-main);
+}
+
+/* Main app layout container */
+.app-layout {
+  min-height: 100vh;
+}
+
+/* Sidebar container */
+.app-sidebar {
+  width: 100%;
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Sidebar header section */
+.sidebar-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Sidebar title */
+.sidebar-title {
+  margin: 0;
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+/* Sidebar subtitle */
+.sidebar-subtitle {
+  margin: 0.35rem 0 0;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+/* Navigation container */
+.sidebar-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 1rem;
+}
+
+/* Navigation links */
+.sidebar-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: var(--neutral-text);
+  background: transparent;
+  transition: all 0.2s ease;
+}
+
+/* Hover state for links */
+.sidebar-link:hover {
+  background: var(--neutral-soft);
+  color: var(--text-main);
+}
+
+/* Active link styling */
+.sidebar-link.active {
+  background: var(--primary-dark);
+  color: #ffffff;
+  box-shadow: 0 0.35rem 1rem rgba(15, 23, 42, 0.15);
+}
+
+/* Main content area */
+.app-main {
+  width: 100%;
+}
+
+/* Dashboard summary card */
+.dashboard-summary-card {
+  border-radius: 24px;
+  background: var(--card-bg);
+}
+
+/* Summary title text */
+.summary-title {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+/* Summary value text */
+.summary-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+/* Summary subtitle */
+.summary-subtitle {
+  font-size: 0.9rem;
+  color: #94a3b8;
+}
+
+/* Shared panel styling */
+.dashboard-panel,
+.filters-panel,
+.table-panel,
+.info-panel,
+.report-panel {
+  border-radius: 24px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 0.125rem 0.75rem rgba(15, 23, 42, 0.05);
+}
+
+/* Section titles */
+.section-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+/* Section subtitles */
+.section-subtitle {
+  color: var(--text-muted);
+  font-size: 0.98rem;
+}
+
+/* Status badge for active */
+.soft-badge-active {
+  background-color: var(--success-soft);
+  color: var(--success-text);
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.45rem 0.8rem;
+  display: inline-block;
+  font-size: 0.8rem;
+}
+
+/* Status badge for closed */
+.soft-badge-closed {
+  background-color: var(--neutral-soft);
+  color: var(--neutral-text);
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.45rem 0.8rem;
+  display: inline-block;
+  font-size: 0.8rem;
+}
+
+/* Table header styling */
+.table-modern thead th {
+  background-color: #f8fafc;
+  color: var(--text-muted);
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+/* Row hover effect */
+.table-modern tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+/* Table spacing */
+.table-modern td,
+.table-modern th {
+  vertical-align: middle;
+  padding: 1rem;
+}
+
+/* Input and select styling */
+.filter-input,
+.filter-select,
+.inline-input,
+.inline-select {
+  border-radius: 14px !important;
+  border: 1px solid #cbd5e1 !important;
+  min-height: 48px;
+}
+
+/* Focus state for inputs */
+.filter-input:focus,
+.filter-select:focus,
+.inline-input:focus,
+.inline-select:focus {
+  box-shadow: none !important;
+  border-color: #2563eb !important;
+}
+
+/* Primary button style */
+.btn-soft-primary {
+  background-color: var(--primary-dark);
+  color: #ffffff;
+  border: none;
+  border-radius: 14px;
+  padding: 0.7rem 1rem;
+  font-weight: 500;
+}
+
+/* Hover primary button */
+.btn-soft-primary:hover {
+  background-color: var(--primary-hover);
+  color: #ffffff;
+}
+
+/* Danger button */
+.btn-soft-danger {
+  background-color: var(--danger-main);
+  color: #ffffff;
+  border: none;
+  border-radius: 14px;
+  padding: 0.7rem 1rem;
+  font-weight: 500;
+}
+
+/* Hover danger */
+.btn-soft-danger:hover {
+  background-color: var(--danger-hover);
+  color: #ffffff;
+}
+
+/* Light button */
+.btn-soft-light {
+  background-color: #ffffff;
+  color: var(--neutral-text);
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  padding: 0.7rem 1rem;
+  font-weight: 500;
+}
+
+/* Hover light button */
+.btn-soft-light:hover {
+  background-color: #f8fafc;
+  color: var(--text-main);
+}
+
+/* Info banner */
+.info-banner {
+  background-color: var(--info-soft);
+  color: var(--info-text);
+  border: 1px solid #bfdbfe;
+  border-radius: 18px;
+  padding: 0.85rem 1rem;
+}
+
+/* Category badge */
+.category-badge {
+  background-color: var(--neutral-soft);
+  color: var(--neutral-text);
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+/* Sortable table headers */
+.sortable-header {
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Hover sortable header */
+.sortable-header:hover {
+  color: var(--text-main);
+}
+
+/* Desktop layout adjustments */
+@media (min-width: 768px) {
+  .app-layout {
+    display: flex;
+  }
+
+  .app-sidebar {
+    width: 280px;
+    min-height: 100vh;
+    border-right: 1px solid var(--border-color);
+    border-bottom: 0;
+    flex-shrink: 0;
+  }
+
+  .sidebar-nav {
+    flex-direction: column;
+  }
+
+  .sidebar-link {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+/* Mobile top navigation */
+.mobile-topbar {
+  background: #ffffff;
+  border-bottom: 1px solid #dde5f0;
+}
+
+/* Mobile branding */
+.mobile-brand {
+  padding: 1rem 1rem 0.75rem;
+}
+
+/* Mobile title */
+.mobile-brand h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #0b1b46;
+  margin-bottom: 0.15rem;
+}
+
+/* Mobile subtitle */
+.mobile-brand p {
+  color: #6c7ea0;
+  font-size: 0.92rem;
+}
+
+/* Mobile navigation grid */
+.mobile-nav-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  padding: 0 1rem 1rem;
+}
+
+/* Mobile navigation link */
+.mobile-nav-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  text-decoration: none;
+  color: #0b1b46;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.75rem 1rem;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+/* Active mobile link */
+.mobile-nav-link.active {
+  background: #0b1533;
+  color: #ffffff;
+  border-color: #0b1533;
+  box-shadow: 0 8px 18px rgba(11, 21, 51, 0.16);
+}
+
+/* Mobile action container */
+.mobile-action-wrap {
+  padding: 0 1rem 1rem;
+}
+
+/* Mobile add button */
+.mobile-add-btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 48px;
+  width: 100%;
+  text-decoration: none;
+  background: #16a34a;
+  color: #ffffff;
+  font-weight: 700;
+  border-radius: 14px;
+  transition: all 0.2s ease;
+}
+
+/* Hover mobile add button */
+.mobile-add-btn:hover {
+  background: #15803d;
+  color: #ffffff;
+}
+

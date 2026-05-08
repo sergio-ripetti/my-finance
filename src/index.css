@@ -1,0 +1,14 @@
+/* Ensure full height layout for the entire app */
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+/* Base body styling */
+body {
+  margin: 0; /* Remove default browser margin */
+  padding: 0; /* Remove default padding */
+  background-color: #f1f5f9; /* Global background color */
+  font-family: Inter, system-ui, sans-serif; /* Default font stack */
+}

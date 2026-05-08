@@ -1,0 +1,21 @@
+/* Profile form animation */
+.profile-form-wrapper {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transform: translateY(-12px);
+  transition:
+    max-height 0.45s ease,
+    opacity 0.35s ease,
+    transform 0.45s ease;
+}
+
+.profile-form-wrapper.show {
+  max-height: 500px;
+  opacity: 1;
+ transition:
+  max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+  opacity 0.4s ease,
+  transform 0.5s ease;
+}
+
