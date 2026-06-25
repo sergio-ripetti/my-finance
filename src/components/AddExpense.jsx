@@ -5,7 +5,7 @@ import {
   removeExpenseById,
 } from "../utils/expenses";
 import { createInitialPayCycle, getActivePayCycle } from "../utils/payCycles";
-import "./AddExpense.css";
+import "./addExpense.css";
 
 
 export default function AddExpense() {

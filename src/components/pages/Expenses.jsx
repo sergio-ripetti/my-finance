@@ -6,7 +6,7 @@ import {
   updateExpenseById,
 } from "../../utils/expenses";
 import { getPayCycles } from "../../utils/payCycles";
-import "./Expenses.css";
+import "./expenses.css";
 
 function Expenses() {
   // Refreshes the data after editing or deleting an expense.
