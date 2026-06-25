@@ -66,14 +66,26 @@ export default function AddExpense() {
     return getExpensesByCycleId(activePayCycle.id);
   }, [activePayCycle, refreshKey]);
 
-  // Allows only numbers and one decimal point.
+  // Validates numeric input: allows only numbers and one decimal point.
+  // Max 10 integer digits and 2 decimal places.
   function validateNumber(e) {
     const { name, value } = e.target;
 
+    // Remove any non-numeric characters except decimal point
     let cleanValue = value.replace(/[^0-9.]/g, "");
 
+    // Ensure only one decimal point
     if ((cleanValue.match(/\./g) || []).length > 1) {
       cleanValue = cleanValue.slice(0, -1);
+    }
+
+    // Limit to 10 digits before decimal and 2 after
+    const parts = cleanValue.split(".");
+    if (parts[0].length > 10) {
+      cleanValue = parts[0].slice(0, 10) + (parts[1] ? "." + parts[1] : "");
+    }
+    if (parts[1] && parts[1].length > 2) {
+      cleanValue = parts[0] + "." + parts[1].slice(0, 2);
     }
 
     setFormData((prev) => ({
@@ -247,27 +259,23 @@ export default function AddExpense() {
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset =
     circumference - (progressPercentage / 100) * circumference;
-  // Show profile form only when setup is incomplete or user clicks Edit Profile
 
-    const hasUserInfo =
-      userInfo?.name?.trim() !== "" &&
-      userInfo?.paymentFrequency !== "" &&
-      userInfo?.paymentFrequency !== "0" &&
-      userInfo?.dateInitial !== "";
+  const hasUserInfo =
+    userInfo?.name?.trim() !== "" &&
+    userInfo?.paymentFrequency !== "" &&
+    userInfo?.paymentFrequency !== "0" &&
+    userInfo?.dateInitial !== "";
 
-    const hasSalary = Number(currentSalary) > 0;
+  const hasSalary = Number(currentSalary) > 0;
 
-    const showProfileForm = !hasUserInfo || !hasSalary || isEditingProfile;
+  const showProfileForm = !hasUserInfo || !hasSalary || isEditingProfile;
   return (
     <>
-      {/* Initial setup and edit profile modal // Used to collect user info and
-      create/update initial pay cycle data */}
-      
-        <div
+      {/* Initial setup and edit profile form */}
+      <div
           className={`profile-form-wrapper ${showProfileForm ? "show" : ""}`}>
           <div className="profile-setup-card">
             <div className="container">
-              {/* User name input */}
               <div className="mb-3">
                 <label htmlFor="nameInput" className="form-label">
                   Name
@@ -282,7 +290,6 @@ export default function AddExpense() {
                 />
               </div>
 
-              {/* Initial payment date input */}
               <div className="mb-3">
                 <label htmlFor="dateInicial" className="form-label">
                   Date Initial Payment
@@ -297,7 +304,6 @@ export default function AddExpense() {
                 />
               </div>
 
-              {/* Payment frequency selector */}
               <div className="mb-3">
                 <label htmlFor="paymentSelect" className="form-label">
                   Payment Frequency
@@ -315,14 +321,11 @@ export default function AddExpense() {
                 </select>
               </div>
 
-              {/* Salary section title */}
               <label htmlFor="salary" className="form-label h4 text-center">
                 Enter your salary
               </label>
 
-              {/* Salary input and save action */}
               <div id="addSalary" className="d-flex align-items-center gap-4">
-                {/* Salary input field */}
                 <input
                   type="text"
                   id="salary"
@@ -333,7 +336,6 @@ export default function AddExpense() {
                   onChange={validateNumber}
                 />
 
-                {/* Save button: triggers salary creation/update */}
                 <button
                   className="btn btn-primary btn-lg"
                   id="add-salary"
@@ -344,24 +346,18 @@ export default function AddExpense() {
             </div>
           </div>
         </div>
-     
 
-      {/** Main container for dashboard summary section */}
       <div className="container-fluid py-4">
-        {/* User summary header: displays basic user and cycle info */}
         <div className="text-center mb-4">
-          {/* Page title with optional user name */}
           <h1 className="mb-2">
             My Finances {userInfo.name ? `- ${userInfo.name}` : ""}
           </h1>
 
-          {/* Payment frequency display */}
           <p className="mb-1">
             <strong>Payment frequency:</strong>{" "}
             {formatFrequency(userInfo.paymentFrequency)}
           </p>
 
-          {/* Start date (only shown if available) */}
           {userInfo.dateInitial && (
             <p className="mb-2">
               <strong>Start date:</strong> {userInfo.dateInitial}
@@ -435,7 +431,6 @@ export default function AddExpense() {
         </div>
         {/** Main row: contains add expense form and expense list */}
         <div className="row">
-          {/* Add expense form */}
           <div className="col-sm-12 col-md-6">
             <h3 className="text-center">Add Expenses</h3>
 
@@ -452,7 +447,6 @@ export default function AddExpense() {
 
               <tbody>
                 <tr>
-                  {/* Expense name input */}
                   <td>
                     <input
                       type="text"
@@ -464,7 +458,6 @@ export default function AddExpense() {
                     />
                   </td>
 
-                  {/* Category selector */}
                   <td>
                     <select
                       name="expenseCategory"
@@ -481,7 +474,6 @@ export default function AddExpense() {
                     </select>
                   </td>
 
-                  {/* Expense amount input */}
                   <td>
                     <input
                       type="text"
@@ -493,7 +485,6 @@ export default function AddExpense() {
                     />
                   </td>
 
-                  {/* Add expense button */}
                   <td>
                     <button
                       id="btnADD"
@@ -507,7 +498,6 @@ export default function AddExpense() {
             </table>
           </div>
 
-          {/* Active cycle expense list */}
           <div className="col-sm-12 col-md-6">
             <h3 className="text-center">Expenses Detail</h3>
 
@@ -523,26 +513,21 @@ export default function AddExpense() {
               </thead>
 
               <tbody>
-                {/* Empty state when no expenses exist */}
                 {expenses.length === 0 ? (
                   <tr>
                     <td colSpan="4">No expenses added yet for this cycle</td>
                   </tr>
                 ) : (
-                  /* Render each expense row */
                   expenses.map((expense) => (
                     <tr key={expense.id}>
                       <td>{expense.name}</td>
 
-                      {/* Category display */}
                       <td className="text-capitalize">
                         {expense.category || "other"}
                       </td>
 
-                      {/* Amount formatted */}
                       <td>${Number(expense.amount).toFixed(2)}</td>
 
-                      {/* Remove expense button */}
                       <td>
                         <button
                           className="btn btn-danger btn-sm"
@@ -556,7 +541,6 @@ export default function AddExpense() {
               </tbody>
             </table>
 
-            {/* Total expenses summary for current cycle */}
             <div className="text-center">
               <h2>Total Expenses</h2>
               <strong>${totalExpenses.toFixed(2)}</strong>

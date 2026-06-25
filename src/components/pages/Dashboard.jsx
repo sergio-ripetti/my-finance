@@ -23,15 +23,8 @@ export default function Dashboard() {
   });
 
 
-  // Redirect user to setup page if initial data is missing
- 
-
   const salary = getFromLocalStorage("salary", 0);
-
-   const hasSalary = Number(salary) > 0;
-
-
- 
+  const hasSalary = Number(salary) > 0;
 
 
   useEffect(() => {

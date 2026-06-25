@@ -10,8 +10,7 @@ import {
   getPayCycles,
   updatePayCycleSalary,
 } from "../../utils/payCycles";
-
-const PAY_CYCLES_KEY = "payCycles";
+import { STORAGE_KEYS } from "../../utils/constants";
 
 function PayCycles() {
   // Input used to create a new cycle.
@@ -38,7 +37,7 @@ function PayCycles() {
 
   // Saves cycles manually to localStorage if needed.
   const savePayCyclesToStorage = (updatedCycles) => {
-    localStorage.setItem(PAY_CYCLES_KEY, JSON.stringify(updatedCycles));
+    localStorage.setItem(STORAGE_KEYS.PAY_CYCLES, JSON.stringify(updatedCycles));
   };
 
   // Creates next pay cycle.

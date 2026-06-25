@@ -1,9 +1,10 @@
 import { getFromLocalStorage, saveToLocalStorage } from "./localStorage";
 import { getActivePayCycle } from "./payCycles";
+import { STORAGE_KEYS } from "./constants";
 
 // Gets all saved expenses from localStorage.
 export function getExpenses() {
-  return getFromLocalStorage("expenses", []);
+  return getFromLocalStorage(STORAGE_KEYS.EXPENSES, []);
 }
 
 // Returns expenses linked to a specific pay cycle.
@@ -45,7 +46,7 @@ export function createExpense({ name, amount, category }) {
   const currentExpenses = getExpenses();
   const updatedExpenses = [...currentExpenses, newExpense];
 
-  saveToLocalStorage("expenses", updatedExpenses);
+  saveToLocalStorage(STORAGE_KEYS.EXPENSES, updatedExpenses);
 
   return {
     success: true,
@@ -62,7 +63,7 @@ export function removeExpenseById(expenseId) {
     (expense) => expense.id !== expenseId,
   );
 
-  saveToLocalStorage("expenses", updatedExpenses);
+  saveToLocalStorage(STORAGE_KEYS.EXPENSES, updatedExpenses);
 
   return updatedExpenses;
 }
@@ -180,7 +181,7 @@ export function updateExpenseById(expenseId, updatedData) {
     };
   });
 
-  saveToLocalStorage("expenses", updatedExpenses);
+  saveToLocalStorage(STORAGE_KEYS.EXPENSES, updatedExpenses);
 
   return updatedExpenses;
 }
