@@ -176,12 +176,6 @@ function Reports() {
       fgColor: { argb: "FF1E3A8A" },
     };
 
-    const lightFill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FFEFF6FF" },
-    };
-
     const headerFont = {
       bold: true,
       color: { argb: "FFFFFFFF" },

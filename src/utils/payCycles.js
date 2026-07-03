@@ -128,7 +128,7 @@ export function createNextPayCycle(salaryAmount) {
 
   const finalCycles = [...updatedCycles, newCycle];
 
-  saveToLocalStorage(PAY_CYCLES_KEY, finalCycles);
+  saveToLocalStorage(STORAGE_KEYS.PAY_CYCLES, finalCycles);
 
   return {
     success: true,
@@ -159,7 +159,7 @@ export function updatePayCycleSalary(cycleId, salaryAmount) {
       : cycle,
   );
 
-  saveToLocalStorage(PAY_CYCLES_KEY, updatedCycles);
+  saveToLocalStorage(STORAGE_KEYS.PAY_CYCLES, updatedCycles);
 
   return {
     success: true,
@@ -209,7 +209,7 @@ export function deletePayCycle(cycleId) {
   );
 
   if (hasActiveCycle) {
-    saveToLocalStorage(PAY_CYCLES_KEY, remainingCycles);
+    saveToLocalStorage(STORAGE_KEYS.PAY_CYCLES, remainingCycles);
 
     return {
       success: true,
@@ -230,7 +230,7 @@ export function deletePayCycle(cycleId) {
       : cycle,
   );
 
-  saveToLocalStorage(PAY_CYCLES_KEY, updatedCycles);
+  saveToLocalStorage(STORAGE_KEYS.PAY_CYCLES, updatedCycles);
 
   return {
     success: true,

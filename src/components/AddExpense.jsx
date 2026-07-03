@@ -58,13 +58,13 @@ export default function AddExpense() {
   // Gets the current active pay cycle.
   const activePayCycle = useMemo(() => {
     return getActivePayCycle();
-  }, [refreshKey]);
+  }, [refreshKey]); // refreshKey triggers re-fetch from localStorage
 
   // Gets expenses linked to the active cycle.
   const expenses = useMemo(() => {
     if (!activePayCycle) return [];
     return getExpensesByCycleId(activePayCycle.id);
-  }, [activePayCycle, refreshKey]);
+  }, [activePayCycle]);
 
   // Validates numeric input: allows only numbers and one decimal point.
   // Max 10 integer digits and 2 decimal places.

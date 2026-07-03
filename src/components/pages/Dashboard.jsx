@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import SummaryCard from "../SummaryCard";
 import { getFromLocalStorage } from "../../utils/localStorage";
 import {
@@ -32,7 +32,7 @@ export default function Dashboard() {
   }, [userInfo, salary]);
 
   const payCycles = useMemo(() => getPayCycles(), []);
-  const activePayCycle = useMemo(() => getActivePayCycle(), [payCycles]);
+  const activePayCycle = useMemo(() => getActivePayCycle(), []);
 
   const activeCycleExpenses = useMemo(() => {
     if (!activePayCycle) return [];
@@ -96,17 +96,17 @@ export default function Dashboard() {
   const largestExpense = useMemo(() => {
     if (!activePayCycle) return null;
     return getLargestExpenseByCycleId(activePayCycle.id);
-  }, [activePayCycle, activeCycleExpenses]);
+  }, [activePayCycle]);
 
   const topCategory = useMemo(() => {
     if (!activePayCycle) return null;
     return getTopCategoryByCycleId(activePayCycle.id);
-  }, [activePayCycle, activeCycleExpenses]);
+  }, [activePayCycle]);
 
   const averageExpense = useMemo(() => {
     if (!activePayCycle) return 0;
     return getAverageExpenseByCycleId(activePayCycle.id);
-  }, [activePayCycle, activeCycleExpenses]);
+  }, [activePayCycle]);
 
   const formatCurrency = (value) =>
     new Intl.NumberFormat("en-NZ", {

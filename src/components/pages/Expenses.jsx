@@ -35,17 +35,17 @@ function Expenses() {
   // Loads expenses with their related cycle information.
   const expenses = useMemo(() => {
     return getExpensesWithCycleInfo().sort((a, b) => b.id - a.id);
-  }, [refreshKey]);
+  }, [refreshKey]); // refreshKey triggers re-fetch from localStorage
 
   // Loads all categories used by expenses.
   const categories = useMemo(() => {
     return getAllExpenseCategories();
-  }, [refreshKey]);
+  }, [refreshKey]); // refreshKey triggers re-fetch from localStorage
 
   // Loads all pay cycles for the cycle filter.
   const payCycles = useMemo(() => {
     return getPayCycles().sort((a, b) => b.id - a.id);
-  }, [refreshKey]);
+  }, [refreshKey]); // refreshKey triggers re-fetch from localStorage
 
   // Checks if the user is using any filter.
   const hasActiveFilters = useMemo(() => {

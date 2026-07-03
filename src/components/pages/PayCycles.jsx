@@ -28,16 +28,11 @@ function PayCycles() {
   // Loads pay cycles ordered by newest first.
   const payCycles = useMemo(() => {
     return getPayCycles().sort((a, b) => b.id - a.id);
-  }, [refreshKey]);
+  }, [refreshKey]); // refreshKey triggers re-fetch from localStorage
 
   // Forces component refresh.
   const refreshCycles = () => {
     setRefreshKey((prev) => prev + 1);
-  };
-
-  // Saves cycles manually to localStorage if needed.
-  const savePayCyclesToStorage = (updatedCycles) => {
-    localStorage.setItem(STORAGE_KEYS.PAY_CYCLES, JSON.stringify(updatedCycles));
   };
 
   // Creates next pay cycle.
