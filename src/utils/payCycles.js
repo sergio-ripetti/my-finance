@@ -91,8 +91,62 @@ export function createInitialPayCycle(userInfo, salary) {
   return payCycles;
 }
 
-// Closes the current cycle and creates a new one.
-export function createNextPayCycle(salaryAmount) {
+// Validates and checks for overlapping cycles.
+// Returns { isValid, error } where error is only set if invalid.
+function validateCycleDates(startDate, endDate, existingCycles) {
+  if (!startDate || !endDate) {
+    return { isValid: false, error: "Start date and end date are required." };
+  }
+
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    return { isValid: false, error: "Invalid date format." };
+  }
+
+  if (end < start) {
+    return { isValid: false, error: "End date must be on or after start date." };
+  }
+
+  // Check for overlaps with existing cycles
+  for (const cycle of existingCycles) {
+    const cycleStart = new Date(cycle.startDate);
+    const cycleEnd = new Date(cycle.endDate);
+
+    // Overlap exists if: new start <= cycle end AND new end >= cycle start
+    if (start <= cycleEnd && end >= cycleStart) {
+      return {
+        isValid: false,
+        error: `New cycle overlaps with existing cycle (${cycle.startDate} to ${cycle.endDate}).`,
+      };
+    }
+  }
+
+  return { isValid: true, error: null };
+}
+
+// Gets suggested dates for the next cycle based on the active cycle.
+export function getSuggestedDates() {
+  const payCycles = getPayCycles();
+  const activeCycle = payCycles.find((cycle) => cycle.status === "active");
+
+  if (!activeCycle) {
+    return { suggestedStartDate: "", suggestedEndDate: "" };
+  }
+
+  const suggestedStartDate = calculateNextStartDate(activeCycle.endDate);
+  const suggestedEndDate = calculateEndDate(
+    suggestedStartDate,
+    activeCycle.paymentFrequency,
+  );
+
+  return { suggestedStartDate, suggestedEndDate };
+}
+
+// Closes the current cycle and creates a new one with custom dates.
+// Accepts optional startDate and endDate; uses calculated defaults if not provided.
+export function createNextPayCycle(salaryAmount, customStartDate, customEndDate) {
   const payCycles = getPayCycles();
 
   const activeCycle = payCycles.find((cycle) => cycle.status === "active");
@@ -104,12 +158,30 @@ export function createNextPayCycle(salaryAmount) {
     };
   }
 
-  const nextStartDate = calculateNextStartDate(activeCycle.endDate);
+  let startDate = customStartDate;
+  let endDate = customEndDate;
 
-  if (!nextStartDate) {
+  // Use calculated defaults if custom dates not provided
+  if (!startDate || !endDate) {
+    startDate = calculateNextStartDate(activeCycle.endDate);
+
+    if (!startDate) {
+      return {
+        success: false,
+        message: "Could not calculate the next cycle start date.",
+      };
+    }
+
+    endDate = calculateEndDate(startDate, activeCycle.paymentFrequency);
+  }
+
+  // Validate the dates
+  const validation = validateCycleDates(startDate, endDate, payCycles);
+
+  if (!validation.isValid) {
     return {
       success: false,
-      message: "Could not calculate the next cycle start date.",
+      message: validation.error,
     };
   }
 
@@ -119,8 +191,8 @@ export function createNextPayCycle(salaryAmount) {
 
   const newCycle = {
     id: Date.now(),
-    startDate: nextStartDate,
-    endDate: calculateEndDate(nextStartDate, activeCycle.paymentFrequency),
+    startDate,
+    endDate,
     salaryAmount: Number(salaryAmount),
     paymentFrequency: activeCycle.paymentFrequency,
     status: "active",

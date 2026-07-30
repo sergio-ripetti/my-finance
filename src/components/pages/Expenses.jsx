@@ -6,12 +6,14 @@ import {
   updateExpenseById,
 } from "../../utils/expenses";
 import { getPayCycles } from "../../utils/payCycles";
+import {
+  formatExpenseDate,
+  formatCycleDate,
+  formatExpenseDateShort,
+} from "../../utils/formatters";
 import "./expenses.css";
 
 function Expenses() {
-  // Refreshes the data after editing or deleting an expense.
-  const [refreshKey, setRefreshKey] = useState(0);
-
   // Filter values used by the search controls.
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -32,20 +34,14 @@ function Expenses() {
   const [sortField, setSortField] = useState("date");
   const [sortDirection, setSortDirection] = useState("desc");
 
-  // Loads expenses with their related cycle information.
-  const expenses = useMemo(() => {
-    return getExpensesWithCycleInfo().sort((a, b) => b.id - a.id);
-  }, [refreshKey]); // refreshKey triggers re-fetch from localStorage
+  // Loads expenses with their related cycle information from localStorage.
+  const expenses = getExpensesWithCycleInfo().sort((a, b) => b.id - a.id);
 
-  // Loads all categories used by expenses.
-  const categories = useMemo(() => {
-    return getAllExpenseCategories();
-  }, [refreshKey]); // refreshKey triggers re-fetch from localStorage
+  // Loads all categories used by expenses from localStorage.
+  const categories = getAllExpenseCategories();
 
-  // Loads all pay cycles for the cycle filter.
-  const payCycles = useMemo(() => {
-    return getPayCycles().sort((a, b) => b.id - a.id);
-  }, [refreshKey]); // refreshKey triggers re-fetch from localStorage
+  // Loads all pay cycles for the cycle filter from localStorage.
+  const payCycles = getPayCycles().sort((a, b) => b.id - a.id);
 
   // Checks if the user is using any filter.
   const hasActiveFilters = useMemo(() => {
@@ -128,7 +124,6 @@ function Expenses() {
     if (!confirmDelete) return;
 
     removeExpenseById(expenseId);
-    setRefreshKey((prev) => prev + 1);
 
     if (editingExpenseId === expenseId) {
       setEditingExpenseId(null);
@@ -201,7 +196,6 @@ function Expenses() {
       category: "food",
       amount: "",
     });
-    setRefreshKey((prev) => prev + 1);
   };
 
   // Changes the table sorting field and direction.
@@ -221,53 +215,6 @@ function Expenses() {
     return sortDirection === "asc" ? "↑" : "↓";
   };
 
-  // Formats the expense creation date.
-  const formatExpenseDate = (dateString) => {
-    if (!dateString) return "Unknown";
-
-    const date = new Date(dateString);
-
-    if (Number.isNaN(date.getTime())) return "Invalid date";
-
-    return date.toLocaleString("en-NZ", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  };
-
-  // Formats cycle dates for desktop and mobile.
-  const formatCycleDate = (dateString, isMobile = false) => {
-    if (!dateString) return "Unknown";
-
-    const date = new Date(dateString);
-
-    if (Number.isNaN(date.getTime())) return "Invalid date";
-
-    return date.toLocaleDateString("en-NZ", {
-      day: "2-digit",
-      month: "short",
-      ...(isMobile ? {} : { year: "numeric" }),
-    });
-  };
-
-  // Formats a shorter date for mobile cards.
-  const formatExpenseDateShort = (dateString) => {
-    if (!dateString) return "Unknown";
-
-    const date = new Date(dateString);
-
-    if (Number.isNaN(date.getTime())) return "Invalid date";
-
-    return date.toLocaleString("en-NZ", {
-      day: "2-digit",
-      month: "short",
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  };
 
   return (
     <section>

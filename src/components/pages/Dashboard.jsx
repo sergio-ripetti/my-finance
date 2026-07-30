@@ -13,6 +13,10 @@ import {
   getLargestExpenseByCycleId,
   getTopCategoryByCycleId,
 } from "../../utils/expenses";
+import {
+  formatCurrency,
+  formatDate,
+} from "../../utils/formatters";
 
 
 export default function Dashboard() {
@@ -108,24 +112,6 @@ export default function Dashboard() {
     return getAverageExpenseByCycleId(activePayCycle.id);
   }, [activePayCycle]);
 
-  const formatCurrency = (value) =>
-    new Intl.NumberFormat("en-NZ", {
-      style: "currency",
-      currency: "NZD",
-    }).format(Number(value || 0));
-
-  const formatDate = (date) => {
-    if (!date) return "Not available";
-
-    const parsedDate = new Date(date);
-    if (Number.isNaN(parsedDate.getTime())) return "Invalid date";
-
-    return parsedDate.toLocaleDateString("en-NZ", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
    const hasUserInfo =
      userInfo?.name?.trim() !== "" &&
      userInfo?.paymentFrequency !== "" &&

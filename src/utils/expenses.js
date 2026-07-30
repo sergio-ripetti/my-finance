@@ -14,15 +14,27 @@ export function getExpensesByCycleId(cycleId) {
   return expenses.filter((expense) => expense.cycleId === cycleId);
 }
 
-// Creates a new expense using the current active cycle.
-export function createExpense({ name, amount, category }) {
-  const activeCycle = getActivePayCycle();
+// Creates a new expense using the specified cycle or active cycle if not specified.
+export function createExpense({ name, amount, category, cycleId } = {}) {
+  let targetCycle;
 
-  if (!activeCycle) {
-    return {
-      success: false,
-      message: "No active pay cycle found.",
-    };
+  if (cycleId) {
+    const allCycles = getFromLocalStorage("payCycles", []);
+    targetCycle = allCycles.find((c) => c.id === cycleId);
+    if (!targetCycle) {
+      return {
+        success: false,
+        message: "Selected pay cycle not found.",
+      };
+    }
+  } else {
+    targetCycle = getActivePayCycle();
+    if (!targetCycle) {
+      return {
+        success: false,
+        message: "No active pay cycle found.",
+      };
+    }
   }
 
   if (!category) {
@@ -39,7 +51,7 @@ export function createExpense({ name, amount, category }) {
     name: name.trim(),
     amount: Number(amount),
     category,
-    cycleId: activeCycle.id,
+    cycleId: targetCycle.id,
     createdAt: now.toISOString(),
   };
 
@@ -110,25 +122,6 @@ export function getExpensesWithCycleInfo() {
 // Groups totals by category for one cycle.
 export function getCategoryTotalsByCycleId(cycleId) {
   const expenses = getExpensesByCycleId(cycleId);
-
-  const totals = expenses.reduce((acc, expense) => {
-    const category = expense.category || "other";
-    const amount = Number(expense.amount || 0);
-
-    acc[category] = (acc[category] || 0) + amount;
-
-    return acc;
-  }, {});
-
-  return Object.entries(totals).map(([category, total]) => ({
-    category,
-    total,
-  }));
-}
-
-// Groups totals by category across all cycles.
-export function getCategoryTotalsAcrossAllCycles() {
-  const expenses = getExpenses();
 
   const totals = expenses.reduce((acc, expense) => {
     const category = expense.category || "other";

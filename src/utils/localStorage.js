@@ -28,19 +28,3 @@ export function saveToLocalStorage(key, value) {
     throw error;
   }
 }
-
-// Clears all app data from localStorage
-export function clearAllAppData() {
-  try {
-    const keys = [
-      "payCycles",
-      "expenses",
-      "salary",
-      "userInfo",
-      "activePayCycleId",
-    ];
-    keys.forEach((key) => localStorage.removeItem(key));
-  } catch (error) {
-    console.error("Error clearing localStorage:", error);
-  }
-}

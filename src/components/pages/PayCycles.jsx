@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   getExpenseCountByCycleId,
   getTotalSpentByCycleId,
@@ -9,15 +10,21 @@ import {
   deletePayCycle,
   getPayCycles,
   updatePayCycleSalary,
+  getSuggestedDates,
 } from "../../utils/payCycles";
 import { STORAGE_KEYS } from "../../utils/constants";
+import {
+  formatCurrency,
+  formatDate,
+  formatFrequency,
+} from "../../utils/formatters";
 
 function PayCycles() {
+  const navigate = useNavigate();
+
   // Input used to create a new cycle.
   const [salaryInput, setSalaryInput] = useState("");
 
-  // Refresh trigger after updates.
-  const [refreshKey, setRefreshKey] = useState(0);
 
   // Stores cycle currently in edit mode.
   const [editingCycleId, setEditingCycleId] = useState(null);
@@ -25,17 +32,19 @@ function PayCycles() {
   // Edited salary value.
   const [editedSalary, setEditedSalary] = useState("");
 
+  // Date editor state
+  const [showDateForm, setShowDateForm] = useState(false);
+  const [suggestedStartDate, setSuggestedStartDate] = useState("");
+  const [suggestedEndDate, setSuggestedEndDate] = useState("");
+  const [editedStartDate, setEditedStartDate] = useState("");
+  const [editedEndDate, setEditedEndDate] = useState("");
+  const [userEditedEndDate, setUserEditedEndDate] = useState(false);
+  const [dateFormError, setDateFormError] = useState("");
+
   // Loads pay cycles ordered by newest first.
-  const payCycles = useMemo(() => {
-    return getPayCycles().sort((a, b) => b.id - a.id);
-  }, [refreshKey]); // refreshKey triggers re-fetch from localStorage
+  const payCycles = getPayCycles().sort((a, b) => b.id - a.id);
 
-  // Forces component refresh.
-  const refreshCycles = () => {
-    setRefreshKey((prev) => prev + 1);
-  };
-
-  // Creates next pay cycle.
+  // Shows the date editor with suggested dates.
   const handleCreateNextCycle = () => {
     const parsedSalary = Number(salaryInput);
 
@@ -44,15 +53,71 @@ function PayCycles() {
       return;
     }
 
-    const result = createNextPayCycle(parsedSalary);
+    const { suggestedStartDate: start, suggestedEndDate: end } =
+      getSuggestedDates();
+
+    setSuggestedStartDate(start);
+    setSuggestedEndDate(end);
+    setEditedStartDate(start);
+    setEditedEndDate(end);
+    setUserEditedEndDate(false);
+    setDateFormError("");
+    setShowDateForm(true);
+  };
+
+  // Handles start date change and auto-recalculates end date if not manually edited.
+  const handleStartDateChange = (newStartDate) => {
+    setEditedStartDate(newStartDate);
+
+    // If user hasn't manually edited the end date, recalculate it
+    if (!userEditedEndDate && suggestedStartDate) {
+      const daysDiff = new Date(newStartDate) - new Date(suggestedStartDate);
+      const daysOffset = Math.floor(daysDiff / (1000 * 60 * 60 * 24));
+
+      const calculatedEnd = new Date(suggestedEndDate);
+      calculatedEnd.setDate(calculatedEnd.getDate() + daysOffset);
+
+      setEditedEndDate(calculatedEnd.toISOString().split("T")[0]);
+    }
+  };
+
+  // Handles end date change; marks it as manually edited.
+  const handleEndDateChange = (newEndDate) => {
+    setEditedEndDate(newEndDate);
+    setUserEditedEndDate(true);
+  };
+
+  // Cancels the date editor and resets form.
+  const handleCancelDateForm = () => {
+    setShowDateForm(false);
+    setSalaryInput("");
+    setEditedStartDate("");
+    setEditedEndDate("");
+    setUserEditedEndDate(false);
+    setDateFormError("");
+  };
+
+  // Submits the cycle creation with custom dates.
+  const handleSubmitCycle = () => {
+    const parsedSalary = Number(salaryInput);
+
+    const result = createNextPayCycle(
+      parsedSalary,
+      editedStartDate,
+      editedEndDate,
+    );
 
     if (!result.success) {
-      alert(result.message);
+      setDateFormError(result.message);
       return;
     }
 
     setSalaryInput("");
-    refreshCycles();
+    setShowDateForm(false);
+    setEditedStartDate("");
+    setEditedEndDate("");
+    setUserEditedEndDate(false);
+    setDateFormError("");
   };
 
   // Opens edit mode for one cycle.
@@ -77,7 +142,11 @@ function PayCycles() {
     }
 
     handleCancelEdit();
-    refreshCycles();
+  };
+
+  // Navigates to Add Expense with the selected cycle ID.
+  const handleAddExpense = (cycle) => {
+    navigate(`/add-expense?cycleId=${cycle.id}`);
   };
 
   // Deletes selected cycle.
@@ -94,36 +163,8 @@ function PayCycles() {
       alert(result.message);
       return;
     }
-
-    refreshCycles();
   };
 
-  // Formats currency values.
-  const formatCurrency = (value) =>
-    new Intl.NumberFormat("en-NZ", {
-      style: "currency",
-      currency: "NZD",
-    }).format(Number(value || 0));
-
-  // Formats dates for display.
-  const formatDate = (date) => {
-    if (!date) return "Not available";
-
-    const parsedDate = new Date(date);
-    if (Number.isNaN(parsedDate.getTime())) return "Invalid date";
-
-    return parsedDate.toLocaleDateString("en-NZ", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
-
-  // Formats payment frequency label.
-  const formatFrequency = (frequency) => {
-    if (!frequency) return "Cycle";
-    return frequency.charAt(0).toUpperCase() + frequency.slice(1);
-  };
 
   return (
     <section className="container-fluid py-3 px-2 px-md-3">
@@ -150,24 +191,76 @@ function PayCycles() {
                 </p>
               </div>
 
-              {/* Create cycle form */}
-              <div className="d-flex flex-row justify-content-center align-items-center gap-3 flex-wrap">
-                <input
-                  type="number"
-                  value={salaryInput}
-                  onChange={(e) => setSalaryInput(e.target.value)}
-                  placeholder="Enter salary amount"
-                  className="form-control rounded-4 py-3 text-center"
-                  style={{ width: "40%", minWidth: "220px" }}
-                />
+              {/* Create cycle form - salary input stage */}
+              {!showDateForm ? (
+                <div className="d-flex flex-row justify-content-center align-items-center gap-3 flex-wrap">
+                  <input
+                    type="number"
+                    value={salaryInput}
+                    onChange={(e) => setSalaryInput(e.target.value)}
+                    placeholder="Enter salary amount"
+                    className="form-control rounded-4 py-3 text-center"
+                    style={{ width: "40%", minWidth: "220px" }}
+                  />
 
-                <button
-                  onClick={handleCreateNextCycle}
-                  className="btn btn-primary rounded-4 py-3 fw-semibold"
-                  style={{ width: "40%", minWidth: "220px" }}>
-                  Create Cycle
-                </button>
-              </div>
+                  <button
+                    onClick={handleCreateNextCycle}
+                    className="btn btn-primary rounded-4 py-3 fw-semibold"
+                    style={{ width: "40%", minWidth: "220px" }}>
+                    Create Cycle
+                  </button>
+                </div>
+              ) : (
+                /* Date editor stage */
+                <div className="d-flex flex-column gap-3">
+                  {dateFormError && (
+                    <div className="alert alert-danger mb-0 small">
+                      {dateFormError}
+                    </div>
+                  )}
+
+                  <div className="d-flex flex-column gap-2">
+                    <label htmlFor="startDate" className="small fw-semibold">
+                      Start Date
+                    </label>
+                    <input
+                      id="startDate"
+                      type="date"
+                      value={editedStartDate}
+                      onChange={(e) => handleStartDateChange(e.target.value)}
+                      className="form-control rounded-3"
+                    />
+                  </div>
+
+                  <div className="d-flex flex-column gap-2">
+                    <label htmlFor="endDate" className="small fw-semibold">
+                      End Date
+                    </label>
+                    <input
+                      id="endDate"
+                      type="date"
+                      value={editedEndDate}
+                      onChange={(e) => handleEndDateChange(e.target.value)}
+                      className="form-control rounded-3"
+                    />
+                  </div>
+
+                  <div className="d-flex gap-2 flex-wrap">
+                    <button
+                      onClick={handleSubmitCycle}
+                      className="btn btn-primary btn-sm rounded-3 flex-grow-1"
+                      style={{ minWidth: "120px" }}>
+                      Create Cycle
+                    </button>
+                    <button
+                      onClick={handleCancelDateForm}
+                      className="btn btn-light btn-sm rounded-3 flex-grow-1"
+                      style={{ minWidth: "120px" }}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -313,6 +406,14 @@ function PayCycles() {
 
                         {/* Mobile action buttons */}
                         <div className="d-flex flex-column gap-2 mt-3">
+                          {cycle.status === "active" && (
+                            <button
+                              className="btn btn-success btn-sm rounded-3 w-100"
+                              onClick={() => handleAddExpense(cycle)}>
+                              Add Expense
+                            </button>
+                          )}
+
                           {!isEditing && (
                             <button
                               className="btn btn-outline-primary btn-sm rounded-3 w-100"
@@ -426,6 +527,14 @@ function PayCycles() {
 
                         {/* Desktop action buttons */}
                         <div className="mt-3 d-flex justify-content-end gap-2 flex-wrap">
+                          {cycle.status === "active" && (
+                            <button
+                              className="btn btn-success btn-sm rounded-3"
+                              onClick={() => handleAddExpense(cycle)}>
+                              Add Expense
+                            </button>
+                          )}
+
                           {isEditing ? (
                             <>
                               <button

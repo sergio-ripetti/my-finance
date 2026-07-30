@@ -1,23 +1,27 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   createExpense,
   getExpensesByCycleId,
   removeExpenseById,
 } from "../utils/expenses";
 import { createInitialPayCycle, getActivePayCycle } from "../utils/payCycles";
+import { getFromLocalStorage } from "../utils/localStorage";
 import "./addExpense.css";
 
 
 export default function AddExpense() {
+  const [searchParams] = useSearchParams();
+  const cycleIdParam = searchParams.get("cycleId");
+  const cycleIdNumber = cycleIdParam ? Number(cycleIdParam) : null;
+
   // Loads the saved salary from localStorage.
   const [salary, setSalary] = useState(() => {
     const savedSalary = localStorage.getItem("salary");
     return savedSalary ? JSON.parse(savedSalary) : 0;
   });
 
-    const [isEditingProfile, setIsEditingProfile] = useState(false);
-    
-
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
 
   // Loads the saved user profile from localStorage.
   const [userInfo, setUserInfo] = useState(() => {
@@ -30,9 +34,7 @@ export default function AddExpense() {
           paymentFrequency: "0",
         };
   });
-  
-  // Refreshes cycle and expense data after changes.
-  const [refreshKey, setRefreshKey] = useState(0);
+
 
   // Stores all form values for profile and expenses.
   const [formData, setFormData] = useState({
@@ -55,10 +57,17 @@ export default function AddExpense() {
     localStorage.setItem("userInfo", JSON.stringify(userInfo));
   }, [userInfo]);
 
-  // Gets the current active pay cycle.
-  const activePayCycle = useMemo(() => {
+  // Gets the specified cycle from URL params, or falls back to active cycle.
+  const activePayCycle = (() => {
+    if (cycleIdNumber) {
+      const allCycles = getFromLocalStorage("payCycles", []);
+      const selectedCycle = allCycles.find((c) => c.id === cycleIdNumber);
+      if (selectedCycle) {
+        return selectedCycle;
+      }
+    }
     return getActivePayCycle();
-  }, [refreshKey]); // refreshKey triggers re-fetch from localStorage
+  })();
 
   // Gets expenses linked to the active cycle.
   const expenses = useMemo(() => {
@@ -139,7 +148,6 @@ export default function AddExpense() {
 
     createInitialPayCycle(userInfoData, parsedSalary);
     setIsEditingProfile(false);
-    setRefreshKey((prev) => prev + 1);
     const payCycles = JSON.parse(localStorage.getItem("payCycles")) || [];
     const activeCycleId = localStorage.getItem("activePayCycleId");
 
@@ -188,11 +196,17 @@ export default function AddExpense() {
       if (!confirmOverBudget) return;
     }
 
-    const result = createExpense({
+    const expenseData = {
       name: formData.expenseName,
       amount: parsedAmount,
       category: formData.expenseCategory,
-    });
+    };
+
+    if (cycleIdNumber) {
+      expenseData.cycleId = cycleIdNumber;
+    }
+
+    const result = createExpense(expenseData);
 
     if (!result.success) {
       alert(result.message);
@@ -206,14 +220,11 @@ export default function AddExpense() {
       expenseAmount: "",
       expenseCategory: "food",
     }));
-
-    setRefreshKey((prev) => prev + 1);
   }
 
   // Removes an expense from the active cycle.
   function handleRemoveExpense(id) {
     removeExpenseById(id);
-    setRefreshKey((prev) => prev + 1);
   }
 
   // Formats payment frequency for display.

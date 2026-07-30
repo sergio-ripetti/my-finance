@@ -125,11 +125,19 @@ The Pay Cycles page allows users to manage salary periods.
 Users can:
 
 - View active and closed cycles
-- Create a new pay cycle
+- Create a new pay cycle with editable suggested dates
 - Add a new salary amount
 - Edit the salary of an existing cycle
 - Delete a cycle
 - View salary, total spent, remaining balance, and expense count for each cycle
+- Add expenses directly from active cycle cards
+
+**Advanced Features:**
+
+- **Editable Suggested Dates**: When creating a new cycle, users see suggested start and end dates based on the active cycle. Both dates can be fully edited before creation.
+- **Auto-Calculated End Dates**: When the start date is changed, the end date automatically recalculates based on the payment frequency (weekly, fortnightly, or monthly). Users can manually override this by editing the end date, and the manual value is preserved if the start date changes again.
+- **Overlap Validation**: The system prevents creating cycles with overlapping date ranges while allowing intentional gaps between cycles.
+- **Add Expense Button**: Active cycle cards display an "Add Expense" button that navigates to the Add Expense page with the cycle pre-selected.
 
 When a new cycle is created, the previous active cycle is closed and the new one becomes active.
 
@@ -192,18 +200,21 @@ src/
 │   │   ├── Expenses.jsx
 │   │   ├── PayCycles.jsx
 │   │   ├── Reports.jsx
-│   │   ├── AddExpense.jsx
 │   │   ├── expenses.css
 │   │   └── addExpense.css
 │   │
+│   ├── AddExpense.jsx
 │   ├── Layout.jsx
 │   ├── Sidebar.jsx
 │   └── SummaryCard.jsx
 │
 ├── utils/
 │   ├── expenses.js
+│   ├── payCycles.js
 │   ├── localStorage.js
-│   └── payCycles.js
+│   ├── constants.js
+│   ├── formatters.js
+│   └── reportExport.js
 │
 ├── App.css
 ├── App.jsx
@@ -297,12 +308,12 @@ Main dependencies used in this project:
 
 ```json
 {
-  "bootstrap": "^5.3.6",
-  "exceljs": "^3.10.0",
+  "bootstrap": "5.3.6",
+  "exceljs": "3.10.0",
   "react": "^19.1.0",
   "react-dom": "^19.1.0",
-  "react-router-dom": "^7.14.1",
-  "recharts": "^2.15.3"
+  "react-router-dom": "7.14.1",
+  "recharts": "2.15.3"
 }
 ```
 

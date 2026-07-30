@@ -1,6 +1,6 @@
 // Reports page
 // Generates financial insights across pay cycles including totals, charts, and export functionality
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { getPayCycles } from "../../utils/payCycles";
 import {
   getCategoryTotalsByCycleIds,
@@ -22,8 +22,14 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import {
+  formatCurrency,
+  formatDate,
+  formatFrequency,
+} from "../../utils/formatters";
 
-import ExcelJS from "exceljs";
+import { generateFinanceReport } from "../../utils/reportExport";
+
 // Colors used by the category pie charts.
 const CATEGORY_COLORS = [
   "#2563eb",
@@ -41,13 +47,47 @@ function Reports() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedCategories, setSelectedCategories] = useState([]);
 
-  // Load and sort pay cycles, prioritizing the active one
+  // Track which accordion sections are open to prevent rendering charts in collapsed containers
+  const [openAccordionChart, setOpenAccordionChart] = useState(false);
+  const [openAccordionCategory, setOpenAccordionCategory] = useState(false);
+
+  // Listen to Bootstrap collapse events to sync accordion state
+  useEffect(() => {
+    const chartElement = document.getElementById("collapseChart");
+    const categoryElement = document.getElementById("collapseCategoryChart");
+
+    const handleChartShow = () => setOpenAccordionChart(true);
+    const handleChartHide = () => setOpenAccordionChart(false);
+    const handleCategoryShow = () => setOpenAccordionCategory(true);
+    const handleCategoryHide = () => setOpenAccordionCategory(false);
+
+    if (chartElement) {
+      chartElement.addEventListener("show.bs.collapse", handleChartShow);
+      chartElement.addEventListener("hide.bs.collapse", handleChartHide);
+    }
+
+    if (categoryElement) {
+      categoryElement.addEventListener("show.bs.collapse", handleCategoryShow);
+      categoryElement.addEventListener("hide.bs.collapse", handleCategoryHide);
+    }
+
+    return () => {
+      if (chartElement) {
+        chartElement.removeEventListener("show.bs.collapse", handleChartShow);
+        chartElement.removeEventListener("hide.bs.collapse", handleChartHide);
+      }
+
+      if (categoryElement) {
+        categoryElement.removeEventListener("show.bs.collapse", handleCategoryShow);
+        categoryElement.removeEventListener("hide.bs.collapse", handleCategoryHide);
+      }
+    };
+  }, []);
+
+  // Load and sort pay cycles in chronological order (oldest first)
+  // This ensures correct cycle numbering (Cycle 1 = oldest, Cycle 2 = next, etc.)
   const payCycles = useMemo(() => {
-    return [...getPayCycles()].sort((a, b) => {
-      if (a.status === "active" && b.status !== "active") return -1;
-      if (a.status !== "active" && b.status === "active") return 1;
-      return b.id - a.id;
-    });
+    return [...getPayCycles()].sort((a, b) => a.id - b.id);
   }, []);
   // Filter pay cycles based on selected status (active, closed, all)
   const filteredPayCycles = useMemo(() => {
@@ -154,350 +194,26 @@ function Reports() {
 
   // Generate and export full financial report as Excel file
   const handleExportExcel = async () => {
-    if (filteredPayCycles.length === 0) {
-      alert("No data available to export.");
-      return;
+    try {
+      const visibleCycleIdsSet = new Set(visibleCycleIds);
+      const expensesDetailData = getExpensesWithCycleInfo().filter((expense) =>
+        visibleCycleIdsSet.has(expense.cycleId),
+      );
+
+      await generateFinanceReport(
+        filteredPayCycles,
+        reportSummary,
+        categoryChartData,
+        expensesDetailData,
+        visibleCycleIds,
+        getTotalSpentByCycleId,
+        getExpenseCountByCycleId,
+      );
+    } catch (error) {
+      alert(error.message);
     }
-
-    const workbook = new ExcelJS.Workbook();
-    workbook.creator = "My Finance App";
-    workbook.created = new Date();
-
-    // Creates workbook sheets.
-    const summarySheet = workbook.addWorksheet("Summary");
-    const cyclesSheet = workbook.addWorksheet("Cycle Breakdown");
-    const categoriesSheet = workbook.addWorksheet("Categories");
-    const expensesSheet = workbook.addWorksheet("Expenses Detail");
-
-    // Excel styling helpers (colors, fonts, borders)
-    const primaryFill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FF1E3A8A" },
-    };
-
-    const headerFont = {
-      bold: true,
-      color: { argb: "FFFFFFFF" },
-    };
-
-    const titleFont = {
-      bold: true,
-      size: 18,
-      color: { argb: "FF111827" },
-    };
-
-    const borderStyle = {
-      top: { style: "thin", color: { argb: "FFE5E7EB" } },
-      left: { style: "thin", color: { argb: "FFE5E7EB" } },
-      bottom: { style: "thin", color: { argb: "FFE5E7EB" } },
-      right: { style: "thin", color: { argb: "FFE5E7EB" } },
-    };
-
-    // Apply currency format to Excel cells
-    const formatMoneyCell = (cell) => {
-      cell.numFmt = '"$"#,##0.00;[Red]-"$"#,##0.00';
-    };
-
-    // Apply consistent header style to Excel rows
-    const applyHeaderStyle = (row) => {
-      row.eachCell((cell) => {
-        cell.fill = primaryFill;
-        cell.font = headerFont;
-        cell.alignment = { vertical: "middle", horizontal: "center" };
-        cell.border = borderStyle;
-      });
-    };
-
-    // Build summary sheet with total income, expenses, savings, and cycle count
-    summarySheet.mergeCells("A1:D1");
-    summarySheet.getCell("A1").value = "Finance Report Summary";
-    summarySheet.getCell("A1").font = titleFont;
-    summarySheet.getCell("A1").alignment = { horizontal: "center" };
-
-    summarySheet.addRow([]);
-    summarySheet.addRow(["Metric", "Value"]);
-    applyHeaderStyle(summarySheet.getRow(3));
-
-    const summaryRows = [
-      ["Total Income", reportSummary.totalIncome],
-      ["Total Expenses", reportSummary.totalExpenses],
-      ["Total Savings", reportSummary.totalSavings],
-      ["Visible Pay Cycles", reportSummary.totalCycles],
-    ];
-
-    summaryRows.forEach((row) => {
-      const addedRow = summarySheet.addRow(row);
-      addedRow.eachCell((cell) => {
-        cell.border = borderStyle;
-        cell.alignment = { vertical: "middle" };
-      });
-
-      if (typeof row[1] === "number" && row[0] !== "Visible Pay Cycles") {
-        formatMoneyCell(addedRow.getCell(2));
-      }
-
-      if (row[0] === "Total Savings" && row[1] < 0) {
-        addedRow.getCell(2).font = {
-          bold: true,
-          color: { argb: "FFDC2626" },
-        };
-      }
-    });
-
-    summarySheet.columns = [
-      { width: 24 },
-      { width: 18 },
-      { width: 16 },
-      { width: 16 },
-    ];
-
-    // Build cycle breakdown sheet with detailed financial data per cycle
-    cyclesSheet.mergeCells("A1:H1");
-    cyclesSheet.getCell("A1").value = "Cycle Breakdown";
-    cyclesSheet.getCell("A1").font = titleFont;
-    cyclesSheet.getCell("A1").alignment = { horizontal: "center" };
-
-    cyclesSheet.addRow([]);
-    cyclesSheet.addRow([
-      "Cycle",
-      "Status",
-      "Start Date",
-      "End Date",
-      "Salary",
-      "Expenses",
-      "Savings",
-      "Expenses Count",
-    ]);
-
-    applyHeaderStyle(cyclesSheet.getRow(3));
-
-    filteredPayCycles.forEach((cycle, index) => {
-      const totalSpent = getTotalSpentByCycleId(cycle.id);
-      const expenseCount = getExpenseCountByCycleId(cycle.id);
-      const savings = Number(cycle.salaryAmount || 0) - Number(totalSpent || 0);
-
-      const row = cyclesSheet.addRow([
-        `${formatFrequency(cycle.paymentFrequency)} Cycle ${index + 1}`,
-        cycle.status === "active" ? "Active" : "Closed",
-        formatDate(cycle.startDate),
-        formatDate(cycle.endDate),
-        Number(cycle.salaryAmount || 0),
-        Number(totalSpent || 0),
-        Number(savings || 0),
-        expenseCount,
-      ]);
-
-      row.eachCell((cell) => {
-        cell.border = borderStyle;
-        cell.alignment = { vertical: "middle" };
-      });
-
-      formatMoneyCell(row.getCell(5));
-      formatMoneyCell(row.getCell(6));
-      formatMoneyCell(row.getCell(7));
-
-      if (cycle.status === "active") {
-        row.getCell(2).fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FFD1FAE5" },
-        };
-        row.getCell(2).font = {
-          bold: true,
-          color: { argb: "FF047857" },
-        };
-      }
-
-      if (savings < 0) {
-        row.getCell(7).font = {
-          bold: true,
-          color: { argb: "FFDC2626" },
-        };
-      }
-    });
-
-    cyclesSheet.columns = [
-      { width: 24 },
-      { width: 14 },
-      { width: 16 },
-      { width: 16 },
-      { width: 16 },
-      { width: 16 },
-      { width: 16 },
-      { width: 18 },
-    ];
-
-    // Build category summary with totals and percentage distribution
-    categoriesSheet.mergeCells("A1:C1");
-    categoriesSheet.getCell("A1").value = "Expenses by Category";
-    categoriesSheet.getCell("A1").font = titleFont;
-    categoriesSheet.getCell("A1").alignment = { horizontal: "center" };
-
-    categoriesSheet.addRow([]);
-    categoriesSheet.addRow(["Category", "Amount", "Percentage"]);
-    applyHeaderStyle(categoriesSheet.getRow(3));
-
-    const totalCategoryAmount = categoryChartData.reduce(
-      (total, item) => total + Number(item.value || 0),
-      0,
-    );
-
-    categoryChartData.forEach((item) => {
-      const percentage =
-        totalCategoryAmount > 0
-          ? Number(item.value || 0) / totalCategoryAmount
-          : 0;
-
-      const row = categoriesSheet.addRow([
-        item.name,
-        Number(item.value || 0),
-        percentage,
-      ]);
-
-      row.eachCell((cell) => {
-        cell.border = borderStyle;
-        cell.alignment = { vertical: "middle" };
-      });
-
-      formatMoneyCell(row.getCell(2));
-      row.getCell(3).numFmt = "0.00%";
-    });
-
-    categoriesSheet.columns = [{ width: 24 }, { width: 18 }, { width: 16 }];
-
-    [summarySheet, cyclesSheet, categoriesSheet, expensesSheet].forEach(
-      (sheet) => {
-        sheet.views = [{ state: "frozen", ySplit: 3 }];
-
-        sheet.eachRow((row, rowNumber) => {
-          row.height = rowNumber === 1 ? 26 : 22;
-        });
-
-        sheet.getRow(3).height = 24;
-      },
-    );
-
-    // Build detailed expenses sheet including cycle and category info
-    const visibleCycleIdsSet = new Set(visibleCycleIds);
-
-    const expensesDetailData = getExpensesWithCycleInfo().filter((expense) =>
-      visibleCycleIdsSet.has(expense.cycleId),
-    );
-
-    expensesSheet.mergeCells("A2:H2");
-    expensesSheet.getCell("A2").value = "Expenses Detail";
-    expensesSheet.getCell("A2").font = titleFont;
-    expensesSheet.getCell("A2").alignment = { horizontal: "center" };
-
-    // Add spacing row before the table header
-    expensesSheet.addRow([]);
-
-    // Create and style the expenses detail header row
-    const expensesHeaderRow = expensesSheet.addRow([
-      "Expense",
-      "Category",
-      "Amount",
-      "Date",
-      "Cycle Status",
-      "Cycle Frequency",
-      "Cycle Start Date",
-      "Cycle End Date",
-    ]);
-
-    applyHeaderStyle(expensesHeaderRow);
-
-    expensesDetailData.forEach((expense) => {
-      const row = expensesSheet.addRow([
-        expense.name,
-        expense.category
-          ? expense.category.charAt(0).toUpperCase() + expense.category.slice(1)
-          : "Other",
-        Number(expense.amount || 0),
-        formatDate(expense.createdAt),
-        expense.cycleStatus === "active" ? "Active" : "Closed",
-        formatFrequency(expense.cycleFrequency),
-        formatDate(expense.cycleStartDate),
-        formatDate(expense.cycleEndDate),
-      ]);
-
-      row.eachCell((cell) => {
-        cell.border = borderStyle;
-        cell.alignment = { vertical: "middle" };
-      });
-
-      formatMoneyCell(row.getCell(3));
-
-      if (expense.cycleStatus === "active") {
-        row.getCell(5).fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FFD1FAE5" },
-        };
-        row.getCell(5).font = {
-          bold: true,
-          color: { argb: "FF047857" },
-        };
-      }
-    });
-
-    expensesSheet.columns = [
-      { width: 24 },
-      { width: 18 },
-      { width: 16 },
-      { width: 18 },
-      { width: 16 },
-      { width: 18 },
-      { width: 18 },
-      { width: 18 },
-    ];
-
-    // Generate Excel file and trigger download in browser
-    const buffer = await workbook.xlsx.writeBuffer();
-
-    const blob = new Blob([buffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-
-    link.href = url;
-    link.download = `finance-report-${new Date().toISOString().split("T")[0]}.xlsx`;
-
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    URL.revokeObjectURL(url);
-  };;
-
-  // Format values as NZD currency
-  const formatCurrency = (value) =>
-    new Intl.NumberFormat("en-NZ", {
-      style: "currency",
-      currency: "NZD",
-    }).format(Number(value || 0));
-
-  // Format date values for display
-  const formatDate = (date) => {
-    if (!date) return "Not available";
-
-    const parsedDate = new Date(date);
-    if (Number.isNaN(parsedDate.getTime())) return "Invalid date";
-
-    return parsedDate.toLocaleDateString("en-NZ", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
   };
 
-  // Formats cycle frequency text.
-  const formatFrequency = (frequency) => {
-    if (!frequency) return "Cycle";
-    return frequency.charAt(0).toUpperCase() + frequency.slice(1);
-  };
 
   return (
     <section className="container-fluid py-3 px-2 px-md-3">
@@ -664,7 +380,7 @@ function Reports() {
               </p>
             ) : (
               <div style={{ width: "100%", height: 380 }}>
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                   <BarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
@@ -712,7 +428,7 @@ function Reports() {
               <div className="row g-4 align-items-start">
                 <div className="col-12 col-xl-6">
                   <div style={{ width: "100%", height: 330 }}>
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                       <PieChart>
                         <Pie
                           data={categoryChartData}
@@ -880,9 +596,9 @@ function Reports() {
                   <p className="text-muted small mb-0">
                     No chart data available for this filter.
                   </p>
-                ) : (
+                ) : openAccordionChart ? (
                   <div style={{ width: "100%", height: 300 }}>
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                       <BarChart data={chartData}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" />
@@ -907,6 +623,8 @@ function Reports() {
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
+                ) : (
+                  <div style={{ width: "100%", height: 300 }} />
                 )}
               </div>
             </div>
@@ -934,10 +652,10 @@ function Reports() {
                   <p className="text-muted small mb-0">
                     No category data available for this filter.
                   </p>
-                ) : (
+                ) : openAccordionCategory ? (
                   <div className="d-flex flex-column gap-3">
                     <div style={{ width: "100%", height: 280 }}>
-                      <ResponsiveContainer width="100%" height="100%">
+                      <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                         <PieChart>
                           <Pie
                             data={categoryChartData}
@@ -992,6 +710,8 @@ function Reports() {
                       ))}
                     </div>
                   </div>
+                ) : (
+                  <div style={{ width: "100%", height: 280 }} />
                 )}
               </div>
             </div>
