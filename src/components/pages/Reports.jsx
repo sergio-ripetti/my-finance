@@ -367,52 +367,6 @@ function Reports() {
           <div className="card-body p-3 p-md-4">
             <div className="mb-3">
               <h3 className="h5 fw-bold text-dark mb-1">
-                Cycle Comparison Chart
-              </h3>
-              <p className="text-muted small mb-0">
-                Salary, expenses, and savings by pay cycle
-              </p>
-            </div>
-
-            {chartData.length === 0 ? (
-              <p className="text-muted small mb-0">
-                No chart data available for this filter.
-              </p>
-            ) : (
-              <div style={{ width: "100%", height: 380 }}>
-                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                  <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar
-                      dataKey="salary"
-                      fill="#2563eb"
-                      radius={[6, 6, 0, 0]}
-                    />
-                    <Bar
-                      dataKey="expenses"
-                      fill="#dc2626"
-                      radius={[6, 6, 0, 0]}
-                    />
-                    <Bar
-                      dataKey="savings"
-                      fill="#16a34a"
-                      radius={[6, 6, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="card border-0 shadow-sm rounded-4 mb-3 mb-md-4">
-          <div className="card-body p-3 p-md-4">
-            <div className="mb-3">
-              <h3 className="h5 fw-bold text-dark mb-1">
                 Expenses by Category
               </h3>
               <p className="text-muted small mb-0">
@@ -482,6 +436,52 @@ function Reports() {
                     ))}
                   </div>
                 </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="card border-0 shadow-sm rounded-4 mb-3 mb-md-4">
+          <div className="card-body p-3 p-md-4">
+            <div className="mb-3">
+              <h3 className="h5 fw-bold text-dark mb-1">
+                Cycle Comparison Chart
+              </h3>
+              <p className="text-muted small mb-0">
+                Salary, expenses, and savings by pay cycle
+              </p>
+            </div>
+
+            {chartData.length === 0 ? (
+              <p className="text-muted small mb-0">
+                No chart data available for this filter.
+              </p>
+            ) : (
+              <div style={{ width: "100%", height: 380 }}>
+                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar
+                      dataKey="salary"
+                      fill="#2563eb"
+                      radius={[6, 6, 0, 0]}
+                    />
+                    <Bar
+                      dataKey="expenses"
+                      fill="#dc2626"
+                      radius={[6, 6, 0, 0]}
+                    />
+                    <Bar
+                      dataKey="savings"
+                      fill="#16a34a"
+                      radius={[6, 6, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             )}
           </div>
@@ -575,62 +575,6 @@ function Reports() {
       <div className="d-block d-md-none">
         <div className="accordion" id="reportsMobileAccordion">
           <div className="accordion-item border rounded-4 overflow-hidden mb-2">
-            <h2 className="accordion-header" id="headingChart">
-              <button
-                className="accordion-button collapsed fw-semibold"
-                type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#collapseChart"
-                aria-expanded="false"
-                aria-controls="collapseChart">
-                Cycle Comparison Chart
-              </button>
-            </h2>
-            <div
-              id="collapseChart"
-              className="accordion-collapse collapse"
-              aria-labelledby="headingChart"
-              data-bs-parent="#reportsMobileAccordion">
-              <div className="accordion-body p-2">
-                {chartData.length === 0 ? (
-                  <p className="text-muted small mb-0">
-                    No chart data available for this filter.
-                  </p>
-                ) : openAccordionChart ? (
-                  <div style={{ width: "100%", height: 300 }}>
-                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                      <BarChart data={chartData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Bar
-                          dataKey="salary"
-                          fill="#2563eb"
-                          radius={[6, 6, 0, 0]}
-                        />
-                        <Bar
-                          dataKey="expenses"
-                          fill="#dc2626"
-                          radius={[6, 6, 0, 0]}
-                        />
-                        <Bar
-                          dataKey="savings"
-                          fill="#16a34a"
-                          radius={[6, 6, 0, 0]}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                ) : (
-                  <div style={{ width: "100%", height: 300 }} />
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="accordion-item border rounded-4 overflow-hidden mb-2">
             <h2 className="accordion-header" id="headingCategoryChart">
               <button
                 className="accordion-button collapsed fw-semibold"
@@ -712,6 +656,62 @@ function Reports() {
                   </div>
                 ) : (
                   <div style={{ width: "100%", height: 280 }} />
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="accordion-item border rounded-4 overflow-hidden mb-2">
+            <h2 className="accordion-header" id="headingChart">
+              <button
+                className="accordion-button collapsed fw-semibold"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#collapseChart"
+                aria-expanded="false"
+                aria-controls="collapseChart">
+                Cycle Comparison Chart
+              </button>
+            </h2>
+            <div
+              id="collapseChart"
+              className="accordion-collapse collapse"
+              aria-labelledby="headingChart"
+              data-bs-parent="#reportsMobileAccordion">
+              <div className="accordion-body p-2">
+                {chartData.length === 0 ? (
+                  <p className="text-muted small mb-0">
+                    No chart data available for this filter.
+                  </p>
+                ) : openAccordionChart ? (
+                  <div style={{ width: "100%", height: 300 }}>
+                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                      <BarChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Bar
+                          dataKey="salary"
+                          fill="#2563eb"
+                          radius={[6, 6, 0, 0]}
+                        />
+                        <Bar
+                          dataKey="expenses"
+                          fill="#dc2626"
+                          radius={[6, 6, 0, 0]}
+                        />
+                        <Bar
+                          dataKey="savings"
+                          fill="#16a34a"
+                          radius={[6, 6, 0, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <div style={{ width: "100%", height: 300 }} />
                 )}
               </div>
             </div>
